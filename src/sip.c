@@ -74,7 +74,7 @@ sip_init(int limit, int only_calls, int no_incomplete)
 
     // Initialize payload parsing regexp
     match_flags = REG_EXTENDED | REG_ICASE | REG_NEWLINE;
-    regcomp(&calls.reg_method, "^([a-zA-Z]+) sip:[^ ]+ SIP/2.0\r", match_flags & ~REG_NEWLINE);
+    regcomp(&calls.reg_method, "^([a-zA-Z]+) sip:[^[:space:]]+ SIP/2.0\r", match_flags & ~REG_NEWLINE);
     regcomp(&calls.reg_callid, "^(Call-ID|i): (.+)\r$", match_flags);
     regcomp(&calls.reg_xcallid, "^(X-Call-ID|X-CID): (.+)\r$", match_flags);
     regcomp(&calls.reg_response, "^SIP/2.0 (([0-9]{3}) [^\r]+)\r", match_flags & ~REG_NEWLINE);
@@ -323,6 +323,9 @@ sip_load_message(const struct pcap_pkthdr *header, const char *src, u_short spor
 
     // Add the message to the found/created call
     call_add_message(call, msg);
+
+    // Parse media data
+    msg_parse_media(msg);
 
     // Update Call State
     call_update_state(call, msg);
@@ -636,17 +639,6 @@ msg_parse_payload(sip_msg_t *msg, const char *payload)
         msg_set_attribute(msg, SIP_ATTR_SIPTOUSER, "%.*s", pmatch[3].rm_eo - pmatch[3].rm_so, payload + pmatch[3].rm_so);
     }
 
-    // SDP Address
-    if (regexec(&calls.reg_sdp_addr, payload, 2, pmatch, 0) == 0) {
-        msg_set_attribute(msg, SIP_ATTR_SDP_ADDRESS, "%.*s", pmatch[1].rm_eo - pmatch[1].rm_so, payload + pmatch[1].rm_so);
-        msg->sdp = 1;
-    }
-
-    // SDP Port
-    if (regexec(&calls.reg_sdp_port, payload, 2, pmatch, 0) == 0) {
-        msg_set_attribute(msg, SIP_ATTR_SDP_PORT, "%.*s", pmatch[1].rm_eo - pmatch[1].rm_so, payload + pmatch[1].rm_so);
-        msg->sdp = 1;
-    }
 
     // Set Source and Destination attributes
     msg_set_attribute(msg, SIP_ATTR_SRC, "%s:%u", msg->src, htons(msg->sport));
@@ -675,6 +667,46 @@ msg_parse_payload(sip_msg_t *msg, const char *payload)
     msg->parsed = 1;
 
     return 0;
+}
+
+void
+msg_parse_media(sip_msg_t *msg)
+{
+
+    sdp_media_t *media;
+    regmatch_t pmatch[4];
+    char address[50];
+    int port;
+
+    // Check if this message has sdp
+    if (!strstr(msg->payload, "application/sdp"))
+        return;
+
+    // Message has SDP
+    msg->sdp = 1;
+
+    // SDP Address
+    if (regexec(&calls.reg_sdp_addr, msg->payload, 2, pmatch, 0) == 0) {
+        sprintf(address, "%.*s", pmatch[1].rm_eo - pmatch[1].rm_so, msg->payload + pmatch[1].rm_so);
+        msg_set_attribute(msg, SIP_ATTR_SDP_ADDRESS, address);
+    }
+
+    // SDP Port
+    if (regexec(&calls.reg_sdp_port, msg->payload, 2, pmatch, 0) == 0) {
+        msg_set_attribute(msg, SIP_ATTR_SDP_PORT, "%.*s", pmatch[1].rm_eo - pmatch[1].rm_so,
+                          msg->payload + pmatch[1].rm_so);
+        port = atoi(msg_get_attribute(msg, SIP_ATTR_SDP_PORT));
+    }
+
+    // Check if we've already added this media
+    if (media_find(msg->call->medias, address, port))
+        return;
+
+    // Otherwise add this media and put it in call media
+    if ((media = media_create(address, port))) {
+        media->next = msg->call->medias;
+        msg->call->medias = media;
+    }
 }
 
 int

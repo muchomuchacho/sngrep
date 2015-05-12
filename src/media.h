@@ -32,32 +32,28 @@
 
 #include "config.h"
 
-typedef struct media_sess media_t;
+//! Shorter declaration of sip_media structure
+typedef struct sdp_media sdp_media_t;
 
-struct media_sess
+struct sdp_media
 {
-    //! Local port
-    int lport;
-    //! Remote port
-    int rport;
-    //! Remote address
-    char *raddress;
+    //! SDP Address
+    char *address;
+    //! SDP port
+    int port;
     //! Number of packets transmited
     int txcnt;
     //! Number of packets received
     int rvcnt;
 
     //! Next media in same call
-    struct media_sess *next;
+    sdp_media_t *next;
 };
 
-const char *
-media_create(int lport, int rport, const char *raddress)
-{
+sdp_media_t *
+media_create(const char *addr, int port);
 
-    return 0;
-}
-
-
+sdp_media_t *
+media_find(sdp_media_t *media, const char *address, int port);
 
 #endif /* __SNGREP_MEDIA_H_ */

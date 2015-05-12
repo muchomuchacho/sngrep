@@ -30,6 +30,7 @@
 #include "config.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include "ui_manager.h"
 #include "option.h"
 #include "keybinding.h"
@@ -90,6 +91,7 @@ key_bindings_init()
     key_bind_action(ACTION_SHOW_FLOW_EX, KEY_F(4));
     key_bind_action(ACTION_SHOW_FLOW_EX, 'x');
     key_bind_action(ACTION_SHOW_FLOW_EX, 'X');
+    key_bind_action(ACTION_SHOW_MEDIA, 'm');
     key_bind_action(ACTION_SHOW_FILTERS, KEY_F(7));
     key_bind_action(ACTION_SHOW_FILTERS, 'f');
     key_bind_action(ACTION_SHOW_FILTERS, 'F');

@@ -26,4 +26,48 @@
  * @brief Source of functions defined in media.h
  */
 
+#include "config.h"
+#include <string.h>
+#include <stdlib.h>
+#include "media.h"
+
+void
+media_init()
+{
+
+}
+
+sdp_media_t *
+media_create(const char *addr, int port)
+{
+    sdp_media_t *media = malloc(sizeof(sdp_media_t));
+
+    if (!media)
+        return 0;
+
+    memset(media, 0, sizeof(sdp_media_t));
+
+    media->address = strdup(addr);
+    media->port = port;
+    return media;
+
+}
+
+sdp_media_t *
+media_find(sdp_media_t *media, const char *address, int port)
+{
+    sdp_media_t *m;
+
+    if (!media)
+        return 0;
+
+    for (m = media; m; m = m->next)
+        if (!strcmp(m->address, address) && m->port == port)
+            return m;
+
+    return 0;
+}
+
+
+
 

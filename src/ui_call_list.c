@@ -37,6 +37,7 @@
 #include "capture.h"
 #include "ui_call_list.h"
 #include "ui_call_flow.h"
+#include "ui_call_media.h"
 #include "ui_call_raw.h"
 #include "ui_save_pcap.h"
 
@@ -518,6 +519,20 @@ call_list_handle_key(PANEL *panel, int key)
                     call_group_add(group, call_get_xcall(info->cur_call));
                 }
                 call_flow_set_group(group);
+                wait_for_input(next_panel);
+                break;
+            case ACTION_SHOW_MEDIA:
+                // Display current call media
+                next_panel = ui_create(ui_find_by_type(PANEL_CALL_MEDIA));
+                if (info->group->callcnt) {
+                    group = info->group;
+                } else {
+                    if (!info->cur_call)
+                        break;
+                    group = call_group_create();
+                    call_group_add(group, info->cur_call);
+                }
+                call_media_set_group(group);
                 wait_for_input(next_panel);
                 break;
             case ACTION_SHOW_RAW:
