@@ -70,9 +70,8 @@ capture_ws_check_packet(u_char *msg_payload, uint32_t *size_payload)
     offset++;
 
     // Only interested in Ws text packets
-    if (ws_opcode != 0x1) {
+    if (ws_opcode != WS_OPCODE_TEXT)
         return 0;
-    }
 
     // Masked flag && Payload len
     ws_mask = (*(msg_payload + offset) & WH_MASK) >> 4;
@@ -95,19 +94,20 @@ capture_ws_check_packet(u_char *msg_payload, uint32_t *size_payload)
         memcpy(ws_mask_key, (msg_payload + offset), 4);
         offset += 4;
     }
+
     *size_payload -= offset;
 
-    // Set the Websocket payload as new payload
-    for (i = 0; i < *size_payload; i++)
-        msg_payload[i] = msg_payload[i + offset];
-
-    // If mask is enabled, unmask the payload
-    if (ws_mask) {
+    if (*size_payload > 0) {
+        // Set the Websocket payload as new payload
         for (i = 0; i < *size_payload; i++)
-            msg_payload[i] = msg_payload[i] ^ ws_mask_key[i % 4];
+            msg_payload[i] = msg_payload[i + offset];
+
+        // If mask is enabled, unmask the payload
+        if (ws_mask) {
+            for (i = 0; i < *size_payload; i++)
+                msg_payload[i] = msg_payload[i] ^ ws_mask_key[i % 4];
+        }
+        msg_payload[*size_payload - 1] = '\0';
     }
-
-    msg_payload[*size_payload - 1] = '\0';
-
     return 1;
 }

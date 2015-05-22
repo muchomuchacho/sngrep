@@ -35,6 +35,8 @@
 #define WH_MASK     0x80
 #define WH_LEN      0x7F
 
+#define WS_OPCODE_TEXT 0x1
+
 int
 capture_ws_check_packet(u_char *msg_payload, uint32_t *size_payload);
 

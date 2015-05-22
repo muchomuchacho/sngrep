@@ -717,6 +717,9 @@ msg_get_header(sip_msg_t *msg, char *out)
     if (is_option_enabled("capture.lookup") && is_option_enabled("sngrep.displayhost")) {
         sprintf(from_addr, "%s:%u", lookup_hostname(msg->src), htons(msg->sport));
         sprintf(to_addr, "%s:%u", lookup_hostname(msg->dst), htons(msg->dport));
+    } else if (is_option_enabled("sngrep.displayalias")) {
+        sprintf(from_addr, "%s:%u", get_alias_value(msg->src), htons(msg->sport));
+        sprintf(to_addr, "%s:%u", get_alias_value(msg->dst), htons(msg->dport));
     } else {
         sprintf(from_addr, "%s:%u", msg->src, htons(msg->sport));
         sprintf(to_addr, "%s:%u", msg->dst, htons(msg->dport));
