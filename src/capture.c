@@ -301,7 +301,7 @@ parse_packet(u_char *mode, const struct pcap_pkthdr *header, const u_char *packe
         }
 #endif
         // Check if packet is Websocket
-        if (capture_ws_check_packet(msg_payload, &size_payload)) {
+        if (msg_payload && capture_ws_check_packet(msg_payload, &size_payload)) {
             transport = 3;
         }
     } else {
