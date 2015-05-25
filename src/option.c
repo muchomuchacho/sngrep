@@ -278,6 +278,7 @@ set_alias_value(const char *address, const char *alias)
     options[optscnt].type = ALIAS;
     options[optscnt].opt = strdup(address);
     options[optscnt].value = strdup(alias);
+    optscnt++;
 }
 
 int
